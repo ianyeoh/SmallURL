@@ -1,0 +1,209 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+
+    {# Load CSS and JavaScript #}
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {% bootstrap_messages %}    
+    <script src="{% static 'script/app.js' %}"></script>
+
+    <title>SmallURL</title>
+    {# Favicon #}
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16x16.png' %}">
+
+    {# Fonts #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400&display=swap" rel="stylesheet">
+</head>
+
+<div class="py-5 px-5 row">
+    {# Form #}
+    <div class="col" style="max-width: fit-content;">
+        <div class="card my-3 mx-3" style="min-width: 400px; max-width: 450px; max-height: fit-content;">
+            <div class="card-body my-2 mx-2">
+                <h2 class="card-title mt-2">SmallURL</h3>
+                <h5 class="card-subtitle mb-4 text-muted">Shorten a long URL</h4>
+                <div class='form-group'>
+                    <form action="/" method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.url.label_tag }}</label>
+                            <div class="input-group">
+                                <div class="col" style="max-width: 85px">
+                                    {{ form.tls }}
+                                </div>
+                                <div class="input-group-text">://</div>
+                                {{ form.url }}
+                            </div>
+                            <div class="form-text float-end">Maximum 200 characters</div>
+                        </div>
+                        <div class="mb-5">
+                            <label class="form-label">{{ form.custom_id.label_tag }}</label>
+                            <div class="input-group">
+                                <div class="input-group-text">{{ hostname }}/</div>
+                                <div class="col">
+                                    {{ form.custom_id }}
+                                </div>
+                            </div>
+                            <div class="form-text float-end">Maximum 50 characters</div>
+                        </div>
+                        {% buttons %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                Make SmallURL
+                            </button>
+                        </div>
+                        {% endbuttons %}
+                    </form>
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error_message }}
+                        </div>
+                    {% endif %}
+    
+                    {% if new_url %}
+                        <div class="alert alert-success" role="alert">
+                            <div class="row">
+                                <div class="col">
+                                    {{ old_url }} was shortened to: <br>
+                                    {{ new_url }}
+                                </div>
+                                <div class="col">
+                                    <button class="btn btn-secondary float-end" style="max-width: fit-content; max-height: fit-content; padding: 5px; font-size: 0.7em;" onclick="CopyText( '{{ new_url }}' )">
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# API Documentation #}
+    <div class="col">
+        <div class="card my-3 mx-3" style="padding: 0px; min-width: 400px; max-width: 600px; max-height: fit-content;">
+            <div class="card-header">
+                Or use the API:
+            </div>
+            
+            <div id="carousel" class="carousel carousel-dark slide" data-bs-ride="carousel" data-bs-interval="false">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#carousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                </div>
+                
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="card-body mb-5">
+                            <h4 class="card-title">Developer API</h3>
+                            <h6 class="card-subtitle mt-2 mb-3 text-muted">Use SmallURL in your own applications with our REST API.</h6>
+                            <p class="card-text">
+                                Completely free to use. No rate limiting or payment plans. 
+                                
+                                Supports redirection to HTTP and HTTPS, and shortened links
+                                are permanent so long as this service is operational. <br><br>
+                                
+                                Allows for link expiry times to be set, automatically deleting
+                                the link once the time has elapsed. Supports custom aliases, for when
+                                URL readability or branding matters.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="carousel-item">
+                        <div class="card-body">
+                            <h3 class="card-title"><span class="badge bg-dark">POST</span>  /api/v1/shortenURL</h3>
+                            <h6 class="card-subtitle mt-2 mb-2 text-muted">URI: https://{{ fullhostname }}/api/v1/shortenURL</h6>
+
+                            <div class="accordion mb-5" id="accordionExample">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingOne">
+                                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                            Query Parameters
+                                        </button>
+                                    </h2>
+                                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                        <div class="accordion-body">
+                                            <h5><span class="badge bg-secondary">url</span><span style="color: rgb(52, 51, 59); font-size: 0.8em;">&nbsp&nbspstring: required</span></h5>
+                                            <p>The URL of the link to be shortened. Must contain the protocol (HTTP or HTTPS). Maximum 200 characters.</p>
+
+                                            <h5><span class="badge bg-secondary">expires_in</span><span style="color: rgb(52, 51, 59); font-size: 0.8em;">&nbsp&nbspinteger: optional</span></h5>
+                                            <p>The number of seconds after the request is made when the link should expire. Must be a valid integer larger than 0.</p>
+                                            
+                                            <h5><span class="badge bg-secondary">custom_id</span><span style="color: rgb(52, 51, 59); font-size: 0.8em;">&nbsp&nbspstring: optional</span></h5>
+                                            <p>A custom alias for the shortened URL, i.e. <span style="font-style: italic;">{{ fullhostname }}/[custom_id].</span> Maximum 50 characters.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingTwo">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                            Returns
+                                        </button>
+                                    </h2>
+                                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                                        <div class="accordion-body">
+                                            <h5><span class="badge bg-success">200</span><span style="color: rgb(52, 51, 59); font-size: 0.8em;">&nbsp&nbspSuccessful Response</span></h5>
+                                            <h5>&emsp;&emsp;<span class="badge bg-secondary">url</span></h5>
+                                            <p>&emsp;&emsp;&emsp;The shortened url in the form: <span style="font-style: italic;">{{ fullhostname }}/[id]</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="carousel-item mb-5">
+                        <div id="carouselExamples" class="carousel slide" data-ride="carousel" data-bs-interval="false">
+                            <div class="row">
+                                <div class="btn-group w-75 mx-3 my-3 col" role="group" aria-label="Sample requests and responses">
+                                    <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked onclick="MoveCarouselTo('#carouselExamples', 0)">
+                                    <label class="btn btn-secondary" for="btnradio1">Sample Request</label>
+                                    
+                                    <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" onclick="MoveCarouselTo('#carouselExamples', 1)">
+                                    <label class="btn btn-secondary" for="btnradio2">Sample Response</label>
+                                </div>
+                            </div>          
+        
+                            <div class="carousel-inner" style="font-family: 'Fira Code', monospace;">
+                                <div class="carousel-item active">
+                                    <div class="card mx-3 mb-2" style="min-height: 200px;">
+                                        <div class="card-body rounded-3" style="background-color: rgb(52, 51, 59); color: white;">
+                                            <span style="color: rgb(255, 122, 100);">curl</span> <span style="color: rgb(255, 210, 74);">-X</span> POST <span style="color: rgb(255, 210, 74);">{{ fullhostname }}/api/v1/shortenURL</span> <span style="color: rgb(140, 153, 153);">\</span><br>
+                                            &emsp;&emsp;<span style="color: rgb(255, 210, 74);">-H</span> "Content-Type: application/json" <span style="color: rgb(140, 153, 153);">\</span><br>
+                                            &emsp;&emsp;<span style="color: rgb(255, 210, 74);">-d</span> '{ <br>
+                                            &emsp;&emsp;&emsp;&emsp;&emsp;"url": "https://ianyeoh.com", <br>
+                                            &emsp;&emsp;&emsp;&emsp;&emsp;"expires_in": 500, <br>
+                                            &emsp;&emsp;&emsp;&emsp;&emsp;"custom_id": "m1Xz" <br>
+                                            &emsp;&emsp;&emsp;&emsp;}' 
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="carousel-item">
+                                    <div class="card mx-3 mb-2" style="min-height: 200px;">
+                                        <div class="card-body rounded-3" style="background-color: rgb(52, 51, 59); color: white;">
+                                            <span style="color: rgb(140, 153, 153);">{</span><br>
+                                            &emsp;&emsp;<span style="color: rgb(255, 122, 100);">"url":</span> "{{ fullhostname }}/m1Xz" <br>
+                                            <span style="color: rgb(140, 153, 153);">}</span><br>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>
